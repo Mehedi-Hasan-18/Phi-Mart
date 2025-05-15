@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from decimal import Decimal
-from product.models import Category,Product
+from product.models import Category,Product,Review
 
 #------------------MODEL SERIALIZER-----------------------
 class CategorySerializer(serializers.ModelSerializer):
@@ -28,3 +28,12 @@ class ProductSerializer(serializers.ModelSerializer):
     
     def claculate_tax(self,product):
         return round(product.price * Decimal(1.1),2)
+    
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['id','name','description']
+        
+    def create(self, validated_data):
+        product_id = self.context['product_id']
+        return Review.objects.create(product_id = product_id, **validated_data)
