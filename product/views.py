@@ -6,6 +6,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from product.filters import ProductFilter
 from rest_framework.filters import SearchFilter,OrderingFilter
 from product.paginations import DefaulfPagination
+from api.permission import IsAdminOrReadOnly
+from rest_framework.permissions import DjangoModelPermissions,DjangoModelPermissionsOrAnonReadOnly
+from .permission import IsAuthorOrReadOnly
 
 class ProductViewSets(ModelViewSet):
     queryset = Product.objects.all()
@@ -15,13 +18,22 @@ class ProductViewSets(ModelViewSet):
     filterset_class = ProductFilter
     search_fields = ['name','description']
     ordering_fields = ['price','updated_at']
+    permission_classes = [IsAdminOrReadOnly]
+    # parser_classes = [DjangoModelPermissions]
+    # parser_classes = [DjangoModelPermissionsOrAnonReadOnly]
+    
     
 class CategoryViewSet(ModelViewSet):
+    permission_classes = [IsAdminOrReadOnly]
     queryset = Category.objects.annotate(product_count = Count("products")).all()
     serializer_class = CategorySerializer
     
 class ReviewViewSet(ModelViewSet):
     serializer_class = ReviewSerializer
+    permission_classes=[IsAuthorOrReadOnly]
+    
+    def perform_create(self, serializer):
+        serializer.save(user = self.request.user)
     
     def get_queryset(self):
         return Review.objects.filter(product_id = self.kwargs['product_pk'])
