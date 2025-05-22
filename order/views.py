@@ -23,6 +23,8 @@ class CartViewSet(CreateModelMixin,RetrieveModelMixin,DestroyModelMixin,GenericV
         serializer.save(user=self.request.user)
     
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Cart.objects.none() 
         return Cart.objects.filter(user = self.request.user)
     
     
@@ -37,9 +39,13 @@ class CartItemViewSet(ModelViewSet):
         return CartItemSerializer
     
     def get_serializer_context(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return {}
         return {'cart_id':self.kwargs['cart_pk']}
     
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CartItem.objects.none() 
         return CartItem.objects.filter(cart_id = self.kwargs['cart_pk'])
     
 class OrderViewSet(ModelViewSet):
@@ -73,8 +79,20 @@ class OrderViewSet(ModelViewSet):
         if self.action == 'update_status':
             return UpdateOrderSerializer
         return OrderSerializer
+    def get_queryset(self):
+        # Handle schema generation (DRF-YASG)
+        if getattr(self, 'swagger_fake_view', False):
+            return Order.objects.none()  # Return empty queryset for schema 
+        
+        # Staff users see all orders
+        if self.request.user.is_staff:
+            return Order.objects.prefetch_related('items__product').all()
+        return Order.objects.prefetch_related('items__product').filter(user=self.request.user)
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return CartItem.objects.none() 
+        
         if self.request.user.is_staff == True:
             return Order.objects.prefetch_related('items__product').all()
         return Order.objects.prefetch_related('items__product').filter(user = self.request.user)

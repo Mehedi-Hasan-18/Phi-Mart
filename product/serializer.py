@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from decimal import Decimal
-from product.models import Category,Product,Review
+from product.models import Category,Product,Review,ProductImage
 from django.contrib.auth import get_user_model
 
 #------------------MODEL SERIALIZER-----------------------
@@ -17,18 +17,24 @@ class SimpleCategorySerializer(serializers.ModelSerializer):
         fields =['id','name','description']
         
     
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ['id','image']
 
     
 class ProductSerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many=True,read_only=True)
     class Meta:
         model = Product
-        fields = ['id','name','description','price','stock','created_at','updated_at','price_with_tax','category']
+        fields = ['id','name','description','price','stock','created_at','updated_at','price_with_tax','category','images']
         
-    # category = SimpleCategorySerializer()
     price_with_tax = serializers.SerializerMethodField(method_name='claculate_tax')
     
     def claculate_tax(self,product):
         return round(product.price * Decimal(1.1),2)
+    
+
 
 class SimpleUserSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField(method_name='get_current_user_name')
