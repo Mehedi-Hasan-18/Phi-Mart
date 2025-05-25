@@ -25,6 +25,9 @@ class ProductViewSets(ModelViewSet):
     ordering_fields = ['price','updated_at']
     permission_classes = [IsAdminOrReadOnly]
     
+    def get_queryset(self):
+        return  Product.objects.prefetch_related('images').all()
+    
     def list(self, request, *args, **kwargs):
         """
         Retrive All The Product
