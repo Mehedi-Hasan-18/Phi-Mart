@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "whitenoise.runserver_nostatic",
+    "corsheaders",
     'drf_yasg',
     'django_filters',
     'rest_framework',
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -77,9 +79,10 @@ WSGI_APPLICATION = 'phi_mart.wsgi.app'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 INTERNAL_IPS = [
-    # ...
     "127.0.0.1",
-    # ...
+]
+CORS_ALLOWED_ORIGINS =[
+    'http://localhost:5173'
 ]
 
 # DATABASES = {
