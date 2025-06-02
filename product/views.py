@@ -9,6 +9,7 @@ from product.paginations import DefaulfPagination
 from api.permission import IsAdminOrReadOnly
 from .permission import IsAuthorOrReadOnly
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 class ProductViewSets(ModelViewSet):
     """
@@ -27,6 +28,42 @@ class ProductViewSets(ModelViewSet):
     
     def get_queryset(self):
         return  Product.objects.prefetch_related('images').all()
+    
+    @swagger_auto_schema(
+        operation_summary='Get All Products with Filtering',
+        manual_parameters=[
+            openapi.Parameter(
+                'category_id',
+                openapi.IN_QUERY,
+                description="Filter by exact category ID",
+                type=openapi.TYPE_INTEGER
+            ),
+            openapi.Parameter(
+                'price__gt',
+                openapi.IN_QUERY,
+                description="Filter products with price greater than this value",
+                type=openapi.TYPE_NUMBER
+            ),
+            openapi.Parameter(
+                'price__lt',
+                openapi.IN_QUERY,
+                description="Filter products with price less than this value",
+                type=openapi.TYPE_NUMBER
+            ),
+            openapi.Parameter(
+                'search',
+                openapi.IN_QUERY,
+                description="Search in product name and description",
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                'ordering',
+                openapi.IN_QUERY,
+                description="Order by: price, -price, updated_at, -updated_at",
+                type=openapi.TYPE_STRING
+            ),
+        ]
+    )
     
     def list(self, request, *args, **kwargs):
         """
