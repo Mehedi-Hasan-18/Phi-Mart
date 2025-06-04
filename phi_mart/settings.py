@@ -175,6 +175,9 @@ DJOSER = {
     'EMAIL_FRONTEND_PROTOCOL':config('FORNTEND_PROTOCAL'),
     "EMAIL_FRONTEND_DOMAIN":config('FORNTEND_DOMAIN'),
     "EMAIL_FRONTEND_SITE_NAME":'PhiMart',
+    'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}',
+    'ACTIVATION_URL': 'activate/{uid}/{token}',
+    'SEND_ACTIVATION_EMAIL': True,
     'SERIALIZERS': {
         'user_create':'users.serializer.UserCreateSerializer',
         'current_user':'users.serializer.UserSerializer',
