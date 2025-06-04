@@ -5,7 +5,7 @@ from rest_framework.viewsets import ModelViewSet
 from django_filters.rest_framework import DjangoFilterBackend
 from product.filters import ProductFilter
 from rest_framework.filters import SearchFilter,OrderingFilter
-from product.paginations import DefaulfPagination
+from product.paginations import DefaultPagination
 from api.permission import IsAdminOrReadOnly
 from .permission import IsAuthorOrReadOnly
 from drf_yasg.utils import swagger_auto_schema
@@ -20,7 +20,7 @@ class ProductViewSets(ModelViewSet):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
     filter_backends = [DjangoFilterBackend,SearchFilter,OrderingFilter]
-    pagination_class = DefaulfPagination
+    pagination_class = DefaultPagination
     filterset_class = ProductFilter
     search_fields = ['name','description']
     ordering_fields = ['price','updated_at']
