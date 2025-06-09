@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
 from order import services
 from rest_framework.response import Response
+from rest_framework import status
 
 # Create your views here.
 
@@ -26,6 +27,15 @@ class CartViewSet(CreateModelMixin,RetrieveModelMixin,DestroyModelMixin,GenericV
         if getattr(self, 'swagger_fake_view', False):
             return Cart.objects.none() 
         return Cart.objects.filter(user = self.request.user)
+    
+    def create(self,request,*args,**kwargs):
+        existing_data = Cart.objects.filter(user = self.request.user).first()
+        
+        if existing_data:
+            serializer = self.get_serializer(existing_data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return super().create(request,*args,**kwargs)
     
     
 class CartItemViewSet(ModelViewSet):
