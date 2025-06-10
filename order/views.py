@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,get_object_or_404
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.mixins import CreateModelMixin,RetrieveModelMixin,DestroyModelMixin
 from order.models import Cart,CartItem,Order,OrderItem
@@ -57,6 +57,10 @@ class CartItemViewSet(ModelViewSet):
         if getattr(self, 'swagger_fake_view', False):
             return CartItem.objects.none() 
         return CartItem.objects.filter(cart_id = self.kwargs['cart_pk'])
+    
+    def perform_create(self, serializer):
+        cart = get_object_or_404(Cart, pk=self.kwargs['cart_pk'])
+        serializer.save(cart=cart)
     
 class OrderViewSet(ModelViewSet):
     serializer_class = OrderSerializer
