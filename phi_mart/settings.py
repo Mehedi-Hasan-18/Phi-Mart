@@ -82,7 +82,7 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 CORS_ALLOWED_ORIGINS =[
-    'http://localhost:5173'
+    'http://localhost:5173','https://phiimart.netlify.app'
 ]
 
 # DATABASES = {
