@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from order import services
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 
 # Create your views here.
@@ -115,12 +116,22 @@ class OrderViewSet(ModelViewSet):
     def get_serializer_context(self):
         return {'user_id':self.request.user.id,'user':self.request.user}
     
-@api_view(['POST'])
-def payment_initiate(request):
-    # Here All The Code For SetUp
-    user = request.user
-    amount = request.data.get('amount')
-    orderId = request.data.get('orderId')
-    num_items = request.data.get("numItems")
+# @api_view(['POST'])
+# def payment_initiate(request):
+#     # Here All The Code For SetUp
+#     user = request.user
+#     amount = request.data.get('amount')
+#     orderId = request.data.get('orderId')
+#     num_items = request.data.get("numItems")
     
-    return Response("Payment Method")
+#     return Response("Payment Method")
+
+class HasOrderProduct(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self,request,product_id):
+        user = request.user
+        has_order = OrderItem.objects.filter(order__user = user,product_id=product_id).exists()
+
+        return Response({"has_order":has_order})
+        
