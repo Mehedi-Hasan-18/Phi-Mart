@@ -1,0 +1,22 @@
+{
+  "name": "phi-mart",
+  "version": "1.0.0",
+  "description": "PhiMart eCommerce API with Vercel Analytics",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node analytics.js",
+    "analytics": "node analytics.js"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.5.0"
+  },
+  "keywords": [
+    "ecommerce",
+    "django",
+    "api",
+    "analytics"
+  ],
+  "author": "Md Mehedi Hasan",
+  "license": "MIT"
+}
