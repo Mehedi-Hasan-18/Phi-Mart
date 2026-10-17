@@ -1,0 +1,99 @@
+name: Keep Supabase Alive
+
+# Supabase pauses free-tier projects after 7 days without activity.
+# This workflow hits a database-backed endpoint every 6 days so the project
+# never reaches that inactivity window.
+
+on:
+  schedule:
+    # Runs on days 1, 7, 13, 19, 25 and 31 of every month (max gap: 6 days)
+    - cron: "0 0 */6 * *"
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "Base URL to ping (overrides SITE_URL)"
+        required: false
+        default: ""
+
+# Never let two runs overlap; the ping is cheap and idempotent anyway.
+concurrency:
+  group: keep-alive
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: Ping site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Ping database-backed endpoint
+        env:
+          # Set the SITE_URL repository variable (Settings > Secrets and
+          # variables > Actions > Variables) or pass `url` on a manual run.
+          SITE_URL: ${{ inputs.url || vars.SITE_URL || 'https://phimart.vercel.app' }}
+        run: |
+          set -euo pipefail
+
+          base_url="${SITE_URL%/}"
+
+          # Hits the URL, follows redirects, retries transient failures, and
+          # prints the HTTP status code (000 when the host is unreachable).
+          probe() {
+            local code
+            code="$(curl -sS -o /dev/null -w '%{http_code}' \
+              --location \
+              --max-time 60 \
+              --retry 3 \
+              --retry-delay 5 \
+              --retry-connrefused \
+              --retry-all-errors \
+              "${base_url}$1" 2>/dev/null)" || true
+            case "${code:-}" in
+              ''|*[!0-9]*) echo "000" ;;
+              *) echo "${code}" ;;
+            esac
+          }
+
+          status="$(probe /healthz/)"
+          echo "/healthz/ -> HTTP ${status}"
+
+          if [ "${status}" = "000" ]; then
+            echo "::error::Could not reach ${base_url}/healthz/"
+            exit 1
+          fi
+
+          # A 5xx from the health endpoint means the app is up but the
+          # database is not -- exactly the state this workflow exists to avoid.
+          if [ "${status}" -ge 500 ]; then
+            echo "::error::Database unreachable (HTTP ${status} from /healthz/) - Supabase was NOT woken up."
+            exit 1
+          fi
+
+          # Health route not deployed yet (404) - fall back to an existing
+          # database-backed API endpoint so the project still gets activity.
+          if [ "${status}" -ge 400 ]; then
+            echo "::warning::/healthz/ returned ${status}; falling back to /api/v1/products/."
+            status="$(probe /api/v1/products/)"
+            echo "/api/v1/products/ -> HTTP ${status}"
+
+            if [ "${status}" = "000" ]; then
+              echo "::error::Could not reach ${base_url}/api/v1/products/"
+              exit 1
+            fi
+
+            if [ "${status}" -ge 500 ]; then
+              echo "::error::Database unreachable (HTTP ${status} from /api/v1/products/) - Supabase was NOT woken up."
+              exit 1
+            fi
+
+            if [ "${status}" -ge 400 ]; then
+              echo "::error::No database-backed endpoint responded successfully (HTTP ${status})."
+              exit 1
+            fi
+          fi
+
+          echo "Ping succeeded (HTTP ${status}) - the database was queried and the Supabase project stays active."
